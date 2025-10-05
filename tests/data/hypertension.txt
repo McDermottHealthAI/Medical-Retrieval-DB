@@ -1,0 +1,26 @@
+This document discusses hypertension (high blood pressure) treatment options.
+
+Hypertension is a common condition where the force of blood against artery walls 
+is consistently too high. It's often called the "silent killer" because it 
+typically has no symptoms until it causes serious health problems.
+
+Normal blood pressure is less than 120/80 mmHg. Hypertension is diagnosed when 
+blood pressure consistently measures 130/80 mmHg or higher.
+
+Treatment approaches include:
+1. Lifestyle modifications:
+   - Reducing sodium intake
+   - Regular physical activity
+   - Maintaining healthy weight
+   - Limiting alcohol consumption
+   - Quitting smoking
+
+2. Medications:
+   - ACE inhibitors
+   - Angiotensin II receptor blockers
+   - Diuretics
+   - Beta-blockers
+   - Calcium channel blockers
+
+Regular monitoring and follow-up with healthcare providers is essential for 
+effective hypertension management.

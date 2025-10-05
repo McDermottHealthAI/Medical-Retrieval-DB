@@ -1,0 +1,15 @@
+# @package _global_
+
+# Default corpus configuration
+corpus:
+  # Default input files (project-relative paths)
+  input_files:
+    - "tests/data/diabetes.txt"
+    - "tests/data/hypertension.txt"
+  
+  # Default output file
+  output_file: "corpus_output.parquet"
+
+# Default configuration
+defaults:
+  - _self_

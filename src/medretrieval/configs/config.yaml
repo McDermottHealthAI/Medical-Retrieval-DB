@@ -1,0 +1,12 @@
+# @package _global_
+
+# Main medretrieval configuration
+defaults:
+  - _self_
+  - corpus
+
+# Hydra configuration to disable outputs directory
+hydra:
+  output_subdir: null
+  job:
+    chdir: false

@@ -45,8 +45,17 @@ This template contains the following files:
 ├── pyproject.toml
 ├── src
 │   └── medretrieval
-│       └── __init__.py
+│       ├── __init__.py
+│       ├── configs
+│       │   ├── config.yaml
+│       │   └── corpus.yaml
+│       └── corpus
+│           └── corpus.py
 ├── tests
+│   ├── data
+│   │   ├── diabetes.txt
+│   │   └── hypertension.txt
+│   └── integration_test.py
 └── uv.lock
 
 ```
