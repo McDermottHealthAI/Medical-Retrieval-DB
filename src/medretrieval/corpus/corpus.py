@@ -1,11 +1,9 @@
 """Corpus management module for medical text documents.
 
-This module provides functionality to read, save, and load corpus objects
-containing medical text documents.
+This module provides functionality to read, save, and load corpus objects containing medical text documents.
 """
 
 from pathlib import Path
-from typing import Dict, List, Union
 
 import pandas as pd
 
@@ -24,9 +22,9 @@ class Corpus:
 
     def __init__(self):
         """Initialize a Corpus object."""
-        self.documents: Dict[str, str] = {}
-    
-    def load_data_files(self, file_paths: Union[str, List[str]], encoding: str = "utf-8") -> None:
+        self.documents: dict[str, str] = {}
+
+    def load_data_files(self, file_paths: str | list[str], encoding: str = "utf-8") -> None:
         """Read text files and add them to the corpus.
 
         Args:
@@ -41,9 +39,11 @@ class Corpus:
             True
             >>> # Read multiple files
             >>> corpus.load_data_files(["tests/data/diabetes.txt", "tests/data/hypertension.txt"])
-            >>> "tests/data/diabetes.txt" in corpus.documents and "tests/data/hypertension.txt" in corpus.documents
+            >>> "tests/data/diabetes.txt" in corpus.documents
             True
-            >>> 
+            >>> "tests/data/hypertension.txt" in corpus.documents
+            True
+            >>>
             >>> # Error cases:
             >>> # File not found
             >>> try:
@@ -61,7 +61,7 @@ class Corpus:
                 raise FileNotFoundError(f"File not found: {file_path}")
 
             try:
-                with open(path, 'r', encoding=encoding) as f:
+                with open(path, encoding=encoding) as f:
                     content = f.read()
 
                 # Use full path as document ID
@@ -69,7 +69,7 @@ class Corpus:
                 self.documents[doc_id] = content
 
             except Exception as e:
-                raise IOError(f"Error reading file {file_path}: {str(e)}")
+                raise OSError(f"Error reading file {file_path}: {e!s}") from e
 
     def save_corpus(self, output_path: str) -> None:
         """Save the corpus to disk in Parquet format.
@@ -99,10 +99,7 @@ class Corpus:
         # Convert documents to DataFrame for Parquet format
         data = []
         for doc_id, content in self.documents.items():
-            data.append({
-                "document_id": doc_id,
-                "content": content
-            })
+            data.append({"document_id": doc_id, "content": content})
 
         df = pd.DataFrame(data)
         df.to_parquet(output_path, index=False)
@@ -124,7 +121,7 @@ class Corpus:
             >>> # Clean up
             >>> import os
             >>> os.remove("test_load.parquet")
-            >>> 
+            >>>
             >>> # Error cases:
             >>> # File not found
             >>> try:
@@ -144,10 +141,10 @@ class Corpus:
             # Convert DataFrame back to documents dictionary
             self.documents = {}
             for _, row in df.iterrows():
-                self.documents[row['document_id']] = row['content']
+                self.documents[row["document_id"]] = row["content"]
 
         except Exception as e:
-            raise IOError(f"Error loading corpus from {input_path}: {str(e)}")
+            raise OSError(f"Error loading corpus from {input_path}: {e!s}") from e
 
     def __len__(self) -> int:
         """Return the number of documents in the corpus."""

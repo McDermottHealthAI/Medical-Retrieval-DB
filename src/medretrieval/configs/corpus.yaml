@@ -6,7 +6,7 @@ corpus:
   input_files:
     - "tests/data/diabetes.txt"
     - "tests/data/hypertension.txt"
-  
+
   # Default output file
   output_file: "corpus_output.parquet"
 

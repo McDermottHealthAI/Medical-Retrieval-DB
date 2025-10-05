@@ -1,10 +1,10 @@
 This document discusses hypertension (high blood pressure) treatment options.
 
-Hypertension is a common condition where the force of blood against artery walls 
-is consistently too high. It's often called the "silent killer" because it 
+Hypertension is a common condition where the force of blood against artery walls
+is consistently too high. It's often called the "silent killer" because it
 typically has no symptoms until it causes serious health problems.
 
-Normal blood pressure is less than 120/80 mmHg. Hypertension is diagnosed when 
+Normal blood pressure is less than 120/80 mmHg. Hypertension is diagnosed when
 blood pressure consistently measures 130/80 mmHg or higher.
 
 Treatment approaches include:
@@ -22,5 +22,5 @@ Treatment approaches include:
    - Beta-blockers
    - Calcium channel blockers
 
-Regular monitoring and follow-up with healthcare providers is essential for 
+Regular monitoring and follow-up with healthcare providers is essential for
 effective hypertension management.
