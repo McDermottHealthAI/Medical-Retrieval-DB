@@ -4,6 +4,7 @@
 defaults:
   - _self_
   - corpus
+  - embedding
 
 # Hydra configuration to disable outputs directory
 hydra:

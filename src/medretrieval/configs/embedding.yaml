@@ -1,0 +1,22 @@
+# @package _global_
+
+# Default embedding configuration
+embedding:
+  # Default model name from Hugging Face Hub
+  model_name: "thomas-sounack/BioClinical-ModernBERT-base"
+  
+  # Device to use for inference (auto, cpu, cuda, cuda:0, etc.)
+  device: "auto"
+  
+  # Batch size for encoding multiple texts
+  batch_size: 32
+  
+  # Maximum sequence length for tokenization
+  max_length: 512
+  
+  # Default output file for saving embeddings
+  output_file: "embeddings_output.parquet"
+
+# Default configuration
+defaults:
+  - _self_

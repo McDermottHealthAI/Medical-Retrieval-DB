@@ -48,9 +48,13 @@ This template contains the following files:
 │       ├── __init__.py
 │       ├── configs
 │       │   ├── config.yaml
-│       │   └── corpus.yaml
-│       └── corpus
-│           └── corpus.py
+│       │   ├── corpus.yaml
+│       │   └── embedding.yaml
+│       ├── corpus
+│       │   └── corpus.py
+│       └── embedding
+│           ├── __init__.py
+│           └── embedding_model.py
 ├── tests
 │   ├── data
 │   │   ├── diabetes.txt
