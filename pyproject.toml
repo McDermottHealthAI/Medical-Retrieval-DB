@@ -3,12 +3,13 @@ requires = ["setuptools>=80.9.0", "setuptools-scm>=9.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "package_name"
+name = "medretrieval"
 dynamic = ["version"] # Makes setuptools-scm manage the version
 authors = [
-  {name="Matthew McDermott", email="mattmcdermott8@gmail.com"}, # Replace with your team's details
+  {name="Hayk Stepanyan", email="haykstepanyan02@example.com"},
+  {name="Matthew McDermott", email="mattmcdermott8@gmail.com"},
 ]
-description = "Add your description here"
+description = "A package for building, indexing, and querying large-scale medical literature embeddings."
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
@@ -44,8 +45,8 @@ markers = [] # Add any custom pytest markers here
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
 
 [project.urls]
-Homepage = "https://github.com/McDermottHealthAI/REPO_NAME" # Replace with your repo URL
-Issues = "https://github.com/McDermottHealthAI/REPO_NAME/issues" # Replace with your repo URL
+Homepage = "https://github.com/McDermottHealthAI/Medical-Retrieval-DB"
+Issues = "https://github.com/McDermottHealthAI/Medical-Retrieval-DB/issues"
 
 [tool.ruff] # Ruff configuration for linting and formatting
 target-version = "py312"

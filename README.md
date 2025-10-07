@@ -1,16 +1,16 @@
-# MHAL-template
+# Medical-Retrieval-DB
 
 [![Python 3.12+](https://img.shields.io/badge/-Python_3.12+-blue?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3100/)
 [![PyPI - Version](https://img.shields.io/pypi/v/package_name)](https://pypi.org/project/package_name/)
 [![Documentation Status](https://readthedocs.org/projects/package_name/badge/?version=latest)](https://package_name.readthedocs.io/en/latest/?badge=latest)
-[![Tests](https://github.com/McDermottHealthAI/MHAL-template/actions/workflows/tests.yaml/badge.svg)](https://github.com/McDermottHealthAI/MHAL-template/actions/workflows/tests.yaml)
+[![Tests](https://github.com/McDermottHealthAI/Medical-Retrieval-DB/actions/workflows/tests.yaml/badge.svg)](https://github.com/McDermottHealthAI/Medical-Retrieval-DB/actions/workflows/tests.yaml)
 [![Test Coverage](https://codecov.io/github/McDermottHealthAI/MHAL-template/graph/badge.svg?token=BV119L5JQJ)](https://codecov.io/github/McDermottHealthAI/MHAL-template)
-[![Code Quality](https://github.com/McDermottHealthAI/MHAL-template/actions/workflows/code-quality-main.yaml/badge.svg)](https://github.com/McDermottHealthAI/MHAL-template/actions/workflows/code-quality-main.yaml)
+[![Code Quality](https://github.com/McDermottHealthAI/Medical-Retrieval-DB/actions/workflows/code-quality-main.yaml/badge.svg)](https://github.com/McDermottHealthAI/Medical-Retrieval-DB/actions/workflows/code-quality-main.yaml)
 [![Contributors](https://img.shields.io/github/contributors/McDermottHealthAI/MHAL-template.svg)](https://github.com/McDermottHealthAI/package_name/graphs/contributors)
 [![Pull Requests](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/McDermottHealthAI/package_name/pulls)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/McDermottHealthAI/package_name#license)
 
-A minimal python package/project template for McDermott Health AI Lab research projects.
+A package for building, indexing, and querying large-scale medical literature embeddings.
 
 ## Quick Setup
 
@@ -44,7 +44,7 @@ This template contains the following files:
 ├── conftest.py
 ├── pyproject.toml
 ├── src
-│   └── package_name
+│   └── medretrieval
 │       └── __init__.py
 ├── tests
 └── uv.lock
@@ -56,11 +56,11 @@ Many of these files are standard, and others are less so. See below for some exp
 To use this template, simply click the "Use this template" button above to create a new repository initialized
 from this repository; next, you will need to change the following aspects of the new repository:
 
-- Rename the `package_name` directory in `src/` to your desired package name.
+- Rename the `medretrieval` directory in `src/` to your desired package name.
 - Update the `pyproject.toml` file with your package name, author information, and other metadata.
 - Update the `README.md` file to point to the correct badge links for your new repository, then update the
     rest of the file with information relevant to your project. You will want to find and replace both
-    `package_name` and `MHAL-template` with your new package / repository name.
+    `medretrieval` and `Medical-Retrieval-DB` with your new package / repository name.
 - Set-up trusted publishing on PyPI for your new package name pointing to the output repository.
 - Set-up appropriate tokens for CodeCov or other services (if necessary) within your repository.
 - Optionally, update the `LICENSE`, `CONTRIBUTING.md`, and `AGENTS.md` files with information relevant to
