@@ -14,66 +14,15 @@ A package for building, indexing, and querying large-scale medical literature em
 
 ## Quick Setup
 
-This template contains the following files:
+Install the package using `uv`:
 
-```python
->>> print_directory(
-...     Path("."),
-...     config=PrintConfig(ignore_regex=(
-...         "^(\\.git|.*\\.gitkeep|\\.venv|\\.pytest_cache|.*__pycache__|.*\\.egg-info"
-...         "|node_modules|\\.ruff_cache"
-...         ")$"
-...     ))
-... )
-├── .github
-│   ├── actions
-│   │   └── setup
-│   │       └── action.yaml
-│   └── workflows
-│       ├── code-quality-main.yaml
-│       ├── code-quality-pr.yaml
-│       ├── python-build.yaml
-│       └── tests.yaml
-├── .gitignore
-├── .pre-commit-config.yaml
-├── .python-version
-├── AGENTS.md
-├── CONTRIBUTORS.md
-├── LICENSE
-├── README.md
-├── conftest.py
-├── pyproject.toml
-├── src
-│   └── medretrieval
-│       ├── __init__.py
-│       ├── configs
-│       │   ├── config.yaml
-│       │   └── corpus.yaml
-│       └── corpus
-│           └── corpus.py
-├── tests
-│   ├── data
-│   │   ├── diabetes.txt
-│   │   └── hypertension.txt
-│   └── integration_test.py
-└── uv.lock
-
+```bash
+uv sync
 ```
 
-Many of these files are standard, and others are less so. See below for some explanation of these files.
+## Usage
 
-To use this template, simply click the "Use this template" button above to create a new repository initialized
-from this repository; next, you will need to change the following aspects of the new repository:
-
-- Rename the `medretrieval` directory in `src/` to your desired package name.
-- Update the `pyproject.toml` file with your package name, author information, and other metadata.
-- Update the `README.md` file to point to the correct badge links for your new repository, then update the
-    rest of the file with information relevant to your project. You will want to find and replace both
-    `medretrieval` and `Medical-Retrieval-DB` with your new package / repository name.
-- Set-up trusted publishing on PyPI for your new package name pointing to the output repository.
-- Set-up appropriate tokens for CodeCov or other services (if necessary) within your repository.
-- Optionally, update the `LICENSE`, `CONTRIBUTING.md`, and `AGENTS.md` files with information relevant to
-    your project.
+The `medretrieval` package provides a `Corpus` class for managing medical text documents. The `Corpus` class automatically detects and loads both `.txt` and `.parquet` files into a unified Polars DataFrame with `document_id` and `content` columns.
 
 > [!WARNING]
 > Note there is no folder in this repository template for `data` -- this is because _you should not put data in your code repository_. Datasets (public or private) should be stored outside of the repository (even if your repository is private) to avoid risking leakage of sensitive data, unnecessary bloat in your code repository, and over specialization to a particular data resource. Similarly, API keys or other "Secrets" for your project should also not be committed to your `git` repository or pushed to GitHub. Note that this applies to the underlying `git` repository as well as the online `github` -- if something is in your `git` commit history, it can be found through the published repository even if it is not on the main branch; in the event that you accidentally commit data or a secret variable, you need to [purge](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) that commit from your `git` history (and/or from your repository) in addition to any other steps you need to take depending on what was added to a repository and/or exposed.
