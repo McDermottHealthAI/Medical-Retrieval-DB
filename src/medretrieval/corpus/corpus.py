@@ -196,14 +196,15 @@ class Corpus:
             ...     output_file.exists()
             True
 
-            Test invalid save path (should raise OSError)
+            Test invalid save path (should raise OSError or PermissionError)
             >>> with yaml_disk(test_data) as temp_dir:
             ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
             ...     try:
             ...         corpus.save("/invalid/path/that/does/not/exist/corpus.parquet")
             ...     except (OSError, PermissionError) as e:
-            ...         print(f"Expected error: {type(e).__name__}")
-            Expected error: OSError
+            ...         error_type = type(e).__name__
+            ...         error_type in ["OSError", "PermissionError"]
+            True
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
