@@ -22,12 +22,11 @@ dependencies = [
     "omegaconf>=2.3.0",
     "pyarrow>=10.0.0",
     "polars>=0.20.0",
-    "yaml-to-disk>=0.0.3",
 ] # Add your runtime dependencies here
 
 [dependency-groups]
 dev = [
-  "pre-commit<4", "ruff", "pytest", "pytest-cov", "pretty-print-directory"
+  "pre-commit<4", "ruff", "pytest", "pytest-cov", "pretty-print-directory", "yaml-to-disk>=0.0.3"
 ] # Add your development (lint, test) dependencies here
 docs = [] # Add your documentation dependencies here (I recommend mkdocs-material)
 

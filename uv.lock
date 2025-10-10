@@ -148,7 +148,6 @@ dependencies = [
     { name = "omegaconf" },
     { name = "polars" },
     { name = "pyarrow" },
-    { name = "yaml-to-disk" },
 ]
 
 [package.dev-dependencies]
@@ -158,6 +157,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "yaml-to-disk" },
 ]
 
 [package.metadata]
@@ -166,7 +166,6 @@ requires-dist = [
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "polars", specifier = ">=0.20.0" },
     { name = "pyarrow", specifier = ">=10.0.0" },
-    { name = "yaml-to-disk", specifier = ">=0.0.3" },
 ]
 
 [package.metadata.requires-dev]
@@ -176,6 +175,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "yaml-to-disk", specifier = ">=0.0.3" },
 ]
 docs = []
 
