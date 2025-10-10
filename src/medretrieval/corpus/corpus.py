@@ -25,10 +25,11 @@ class Corpus:
             file_paths: Single file path, directory path, or list of file paths to load.
             include_subdirs: If True, search subdirectories recursively.
         """
-        self.data = self._load_data(file_paths, include_subdirs)
+        self.data = self.load_data(file_paths, include_subdirs)
 
-    def _load_data(
-        self, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
+    @classmethod
+    def load_data(
+        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
     ) -> pl.LazyFrame:
         """Load files from path using lazy loading.
 
@@ -40,14 +41,13 @@ class Corpus:
             Polars LazyFrame with document_id and content columns (call .collect() to materialize)
 
         Examples:
-            >>> corpus = Corpus.__new__(Corpus)  # Create instance without __init__
-
             Load single text file
+
             >>> test_data = '''
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     df = corpus._load_data(temp_dir / "diabetes.txt").collect()
+            ...     df = Corpus.load_data(temp_dir / "diabetes.txt").collect()
             ...     df.columns
             ['document_id', 'content']
             >>> df.height
@@ -56,17 +56,17 @@ class Corpus:
             True
 
             Unsupported file type
+
             >>> test_data = '''
             ... invalid_file.py: "print('hello')"
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     try:
-            ...         corpus._load_data(temp_dir / "invalid_file.py")
-            ...     except ValueError as e:
-            ...         str(e).startswith("Unsupported file type:")
-            True
+            ...     Corpus.load_data(temp_dir / "invalid_file.py")
+            Traceback (most recent call last):
+                ...
+            ValueError: Unsupported file type: .py
         """
-        file_paths = self._get_file_paths(paths, include_subdirs)
+        file_paths = cls._get_file_paths(paths, include_subdirs)
 
         dfs = []
         for file_path in file_paths:
@@ -92,8 +92,9 @@ class Corpus:
                 raise OSError(f"Error reading file {file_path}: {e!s}") from e
         return pl.concat(dfs)
 
+    @classmethod
     def _get_file_paths(
-        self, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
+        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
     ) -> set[Path]:
         """Collect all file paths from the given paths.
 
@@ -105,29 +106,30 @@ class Corpus:
             Set of Path objects for all found files
 
         Examples:
-            >>> corpus = Corpus.__new__(Corpus)  # Create instance without __init__
-
             Single file path
+
             >>> test_data = '''
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = corpus._get_file_paths(temp_dir / "diabetes.txt")
+            ...     result = Corpus._get_file_paths(temp_dir / "diabetes.txt")
             ...     list(result)[0].name
             'diabetes.txt'
 
             Directory (non-recursive)
+
             >>> test_data = '''
             ... data:
             ...   diabetes.txt: "Diabetes info"
             ...   hypertension.txt: "Hypertension info"
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = corpus._get_file_paths(temp_dir / "data")
+            ...     result = Corpus._get_file_paths(temp_dir / "data")
             ...     sorted([p.name for p in result])
             ['diabetes.txt', 'hypertension.txt']
 
             Recursive directory
+
             >>> test_data = '''
             ... data:
             ...   diabetes.txt: "Diabetes info"
@@ -135,16 +137,16 @@ class Corpus:
             ...     hypertension.txt: "Hypertension info"
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
+            ...     result = Corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
             ...     sorted([p.name for p in result])
             ['diabetes.txt', 'hypertension.txt']
 
             Error: nonexistent path
-            >>> try:
-            ...     corpus._get_file_paths("nonexistent.txt")
-            ... except FileNotFoundError as e:
-            ...     str(e).startswith("Path not found:")
-            True
+
+            >>> Corpus._get_file_paths("nonexistent.txt")
+            Traceback (most recent call last):
+                ...
+            FileNotFoundError: Path not found: nonexistent.txt
         """
         if not isinstance(paths, list):
             paths = [paths]
@@ -159,8 +161,8 @@ class Corpus:
 
             if path.is_dir():
                 if include_subdirs:
-                    file_paths.update(path.glob("**/*.txt"))
-                    file_paths.update(path.glob("**/*.parquet"))
+                    file_paths.update(path.rglob("*.txt"))
+                    file_paths.update(path.rglob("*.parquet"))
                 else:
                     file_paths.update(path.glob("*.txt"))
                     file_paths.update(path.glob("*.parquet"))
@@ -177,6 +179,7 @@ class Corpus:
 
         Examples:
             Basic save to existing directory
+
             >>> test_data = '''
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
@@ -188,6 +191,7 @@ class Corpus:
             True
 
             Automatically create non-existing directories
+
             >>> with yaml_disk(test_data) as temp_dir:
             ...     output_dir = temp_dir / "nested" / "subdir"
             ...     output_file = output_dir / "corpus.parquet"
@@ -197,15 +201,14 @@ class Corpus:
             True
 
             Test invalid save path (should raise OSError or PermissionError)
+
             >>> with yaml_disk(test_data) as temp_dir:
             ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
-            ...     try:
-            ...         corpus.save("/invalid/path/that/does/not/exist/corpus.parquet")
-            ...     except (OSError, PermissionError) as e:
-            ...         error_type = type(e).__name__
-            ...         error_type in ["OSError", "PermissionError"]
-            True
+            ...     corpus.save("/invalid/path/that/does/not/exist/corpus.parquet")
+            Traceback (most recent call last):
+                ...
+            OSError: ...
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        self.data.collect().write_parquet(output_path)
+        self.data.sink_parquet(output_path)
