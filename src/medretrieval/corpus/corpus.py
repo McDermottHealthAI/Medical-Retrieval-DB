@@ -141,19 +141,7 @@ class Corpus:
             ...     list(result)[0].name
             'diabetes.txt'
 
-            Directory (non-recursive)
-
-            >>> test_data = '''
-            ... data:
-            ...   diabetes.txt: "Diabetes info"
-            ...   hypertension.txt: "Hypertension info"
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = Corpus._get_file_paths(temp_dir / "data")
-            ...     sorted([p.name for p in result])
-            ['diabetes.txt', 'hypertension.txt']
-
-            Recursive directory
+            Directory with txt files
 
             >>> test_data = '''
             ... data:
@@ -162,9 +150,34 @@ class Corpus:
             ...     hypertension.txt: "Hypertension info"
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
+            ...     # Non-recursive
+            ...     result = Corpus._get_file_paths(temp_dir / "data")
+            ...     sorted([p.name for p in result])
+            ['diabetes.txt']
+            >>> with yaml_disk(test_data) as temp_dir:
+            ...     # Recursive
             ...     result = Corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
             ...     sorted([p.name for p in result])
             ['diabetes.txt', 'hypertension.txt']
+
+            Mixed sources (txt files + HF datasets)
+
+            >>> test_data = '''
+            ... data:
+            ...   file1.txt: "Content 1"
+            ...   dataset1:
+            ...     dataset_info.json: '{"features": {"document_id": "string", "content": "string"}}'
+            ...     state.json: '{"_data_files": []}'
+            ...   subdir:
+            ...     file2.txt: "Content 2"
+            ...     dataset2:
+            ...       dataset_info.json: '{"features": {"document_id": "string", "content": "string"}}'
+            ...       state.json: '{"_data_files": []}'
+            ... '''
+            >>> with yaml_disk(test_data) as temp_dir:
+            ...     result = Corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
+            ...     sorted([p.name for p in result])
+            ['dataset1', 'dataset2', 'file1.txt', 'file2.txt']
 
             Error: nonexistent path
 
@@ -187,10 +200,13 @@ class Corpus:
             if path.is_dir():
                 if include_subdirs:
                     file_paths.update(path.rglob("*.txt"))
-                    file_paths.update(path.rglob("*.parquet"))
+                    # HF datasets are stored in directories with a dataset_info.json file
+                    dataset_dirs = {p.parent for p in path.rglob("dataset_info.json")}
+                    file_paths.update(dataset_dirs)
                 else:
                     file_paths.update(path.glob("*.txt"))
-                    file_paths.update(path.glob("*.parquet"))
+                    if (path / "dataset_info.json").exists():
+                        file_paths.add(path)
             elif path.is_file():
                 file_paths.add(path)
 
