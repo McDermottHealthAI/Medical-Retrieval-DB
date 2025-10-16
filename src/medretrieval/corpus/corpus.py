@@ -118,19 +118,17 @@ class Corpus:
             Set of Path objects for all found files
 
         Examples:
-            Directory (non-recursive)
+            Single file path
 
             >>> test_data = '''
-            ... data:
-            ...   diabetes.txt: "Diabetes info"
-            ...   hypertension.txt: "Hypertension info"
+            ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = Corpus._get_file_paths(temp_dir / "data")
-            ...     sorted([p.name for p in result])
-            ['diabetes.txt', 'hypertension.txt']
+            ...     result = Corpus._get_file_paths(temp_dir / "diabetes.txt")
+            ...     list(result)[0].name
+            'diabetes.txt'
 
-            Recursive directory
+            Directory (non-recursive)
 
             >>> test_data = '''
             ... data:
