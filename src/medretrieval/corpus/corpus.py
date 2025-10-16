@@ -5,24 +5,27 @@ This module provides functionality to read, save, and load corpus objects contai
 
 from pathlib import Path
 
-from datasets import Dataset, concatenate_datasets, load_dataset
+from datasets import Dataset, concatenate_datasets
 
 
 class Corpus:
     """A utility class for managing medical text documents.
 
-    The Corpus class provides static methods to load txt files into Hugging Face Datasets with document_id and
-    content columns.
+    The Corpus class provides static methods to load txt and parquet files into Hugging Face Datasets with
+    document_id and content columns. Supports streaming for large parquet files to enable memory-efficient
+    processing.
     """
 
     @staticmethod
-    def load_data(paths: str | Path | list[str] | list[Path], include_subdirs: bool = False, streaming: bool = False) -> Dataset:
+    def load_data(
+        paths: str | Path | list[str] | list[Path], include_subdirs: bool = False, streaming: bool = False
+    ) -> Dataset:
         """Load files from path and return as Hugging Face Dataset.
 
         Supports loading:
         - Individual .txt files
-        - Directories containing .txt files
-        - Directories containing Hugging Face datasets (saved with save_to_disk)
+        - Individual .parquet files (with streaming)
+        - Directories containing .txt/.parquet files
 
         Args:
             paths: Single file path, directory path, or list of file paths
@@ -30,7 +33,8 @@ class Corpus:
             streaming: If True, load parquet files lazily for memory efficiency
 
         Returns:
-            Hugging Face Dataset with document_id and content columns
+            Hugging Face Dataset with document_id and content columns.
+            When streaming=True, parquet files are loaded lazily for memory efficiency.
 
         Examples:
             Load single text file
