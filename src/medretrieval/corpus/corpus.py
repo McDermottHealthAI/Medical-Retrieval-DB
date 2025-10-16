@@ -5,40 +5,31 @@ This module provides functionality to read, save, and load corpus objects contai
 
 from pathlib import Path
 
-import polars as pl
+from datasets import Dataset, concatenate_datasets, load_from_disk
 
 
 class Corpus:
-    """A corpus object that manages medical text documents.
+    """A utility class for managing medical text documents.
 
-    The Corpus class automatically detects file types and loads txt and parquet files
-    into a unified DataFrame with document_id and content columns.
-
-    Attributes:
-        data: Polars DataFrame containing document_id and content columns
+    The Corpus class provides static methods to load txt files into Hugging Face Datasets with document_id and
+    content columns.
     """
 
-    def __init__(self, file_paths: str | Path | list[str] | list[Path], include_subdirs: bool = False):
-        """Initialize a Corpus object and load files from path.
+    @staticmethod
+    def load_data(paths: str | Path | list[str] | list[Path], include_subdirs: bool = False) -> Dataset:
+        """Load files from path and return as Hugging Face Dataset.
 
-        Args:
-            file_paths: Single file path, directory path, or list of file paths to load.
-            include_subdirs: If True, search subdirectories recursively.
-        """
-        self.data = self.load_data(file_paths, include_subdirs)
-
-    @classmethod
-    def load_data(
-        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
-    ) -> pl.LazyFrame:
-        """Load files from path using lazy loading.
+        Supports loading:
+        - Individual .txt files
+        - Directories containing .txt files
+        - Directories containing Hugging Face datasets (saved with save_to_disk)
 
         Args:
             paths: Single file path, directory path, or list of file paths
             include_subdirs: If True, search subdirectories recursively.
 
         Returns:
-            Polars LazyFrame with document_id and content columns (call .collect() to materialize)
+            Hugging Face Dataset with document_id and content columns
 
         Examples:
             Load single text file
@@ -47,12 +38,27 @@ class Corpus:
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     df = Corpus.load_data(temp_dir / "diabetes.txt").collect()
-            ...     df.columns
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
+            ...     dataset.column_names
             ['document_id', 'content']
-            >>> df.height
+            >>> len(dataset)
             1
-            >>> df["content"][0].startswith("Diabetes is a chronic condition")
+            >>> dataset["content"][0].startswith("Diabetes is a chronic condition")
+            True
+
+            Load Hugging Face dataset directory
+
+            >>> test_data = '''
+            ... diabetes.txt: "Diabetes is a chronic condition..."
+            ... '''
+            >>> with yaml_disk(test_data) as temp_dir:
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
+            ...     output_dir = temp_dir / "corpus_dataset"
+            ...     Corpus.save(dataset, output_dir)
+            ...     loaded_dataset = Corpus.load_data(output_dir)
+            ...     len(loaded_dataset)
+            1
+            >>> loaded_dataset["content"][0].startswith("Diabetes is a chronic condition")
             True
 
             Unsupported file type
@@ -66,35 +72,38 @@ class Corpus:
                 ...
             ValueError: Unsupported file type: .py
         """
-        file_paths = cls._get_file_paths(paths, include_subdirs)
+        file_paths = Corpus._get_file_paths(paths, include_subdirs)
 
-        dfs = []
+        dsets = []
+        documents = []
         for file_path in file_paths:
-            try:
-                if file_path.suffix.lower() == ".txt":
-                    content = file_path.read_text()
-                    df = pl.DataFrame({"document_id": [str(file_path)], "content": [content]})
-                    dfs.append(df.lazy())
-                elif file_path.suffix.lower() == ".parquet":
-                    df = pl.scan_parquet(file_path)
-                    if "document_id" not in df.columns or "content" not in df.columns:
-                        raise ValueError(
-                            f"Parquet file {file_path} must contain 'document_id' and 'content' columns"
-                        )
-                    dfs.append(df)
-                else:
-                    raise ValueError(f"Unsupported file type: {file_path.suffix}")
+            if file_path.is_dir():
+                try:
+                    dataset = load_from_disk(file_path)
+                    dsets.append(dataset)
+                except Exception as e:
+                    raise OSError(f"Error loading Hugging Face dataset from {file_path}: {e!s}") from e
+            else:
+                try:
+                    if file_path.suffix.lower() == ".txt":
+                        content = file_path.read_text()
+                        documents.append({"document_id": str(file_path), "content": content})
+                    else:
+                        raise ValueError(f"Unsupported file type: {file_path.suffix}")
+                except ValueError as e:
+                    # Re-raise ValueError as-is (unsupported file type)
+                    raise e
+                except Exception as e:
+                    raise OSError(f"Error reading file {file_path}: {e!s}") from e
 
-            except ValueError as e:
-                # Re-raise ValueError as-is (unsupported file type)
-                raise e
-            except Exception as e:
-                raise OSError(f"Error reading file {file_path}: {e!s}") from e
-        return pl.concat(dfs)
+        if documents:
+            dsets.append(Dataset.from_list(documents))
 
-    @classmethod
+        return concatenate_datasets(dsets)
+
+    @staticmethod
     def _get_file_paths(
-        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
+        paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
     ) -> set[Path]:
         """Collect all file paths from the given paths.
 
@@ -116,19 +125,7 @@ class Corpus:
             ...     list(result)[0].name
             'diabetes.txt'
 
-            Directory (non-recursive)
-
-            >>> test_data = '''
-            ... data:
-            ...   diabetes.txt: "Diabetes info"
-            ...   hypertension.txt: "Hypertension info"
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = Corpus._get_file_paths(temp_dir / "data")
-            ...     sorted([p.name for p in result])
-            ['diabetes.txt', 'hypertension.txt']
-
-            Recursive directory
+            Directory with txt files
 
             >>> test_data = '''
             ... data:
@@ -137,9 +134,34 @@ class Corpus:
             ...     hypertension.txt: "Hypertension info"
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
+            ...     # Non-recursive
+            ...     result = Corpus._get_file_paths(temp_dir / "data")
+            ...     sorted([p.name for p in result])
+            ['diabetes.txt']
+            >>> with yaml_disk(test_data) as temp_dir:
+            ...     # Recursive
             ...     result = Corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
             ...     sorted([p.name for p in result])
             ['diabetes.txt', 'hypertension.txt']
+
+            Mixed sources (txt files + HF datasets)
+
+            >>> test_data = '''
+            ... data:
+            ...   file1.txt: "Content 1"
+            ...   dataset1:
+            ...     dataset_info.json: '{"features": {"document_id": "string", "content": "string"}}'
+            ...     state.json: '{"_data_files": []}'
+            ...   subdir:
+            ...     file2.txt: "Content 2"
+            ...     dataset2:
+            ...       dataset_info.json: '{"features": {"document_id": "string", "content": "string"}}'
+            ...       state.json: '{"_data_files": []}'
+            ... '''
+            >>> with yaml_disk(test_data) as temp_dir:
+            ...     result = Corpus._get_file_paths(temp_dir / "data", include_subdirs=True)
+            ...     sorted([p.name for p in result])
+            ['dataset1', 'dataset2', 'file1.txt', 'file2.txt']
 
             Error: nonexistent path
 
@@ -162,20 +184,25 @@ class Corpus:
             if path.is_dir():
                 if include_subdirs:
                     file_paths.update(path.rglob("*.txt"))
-                    file_paths.update(path.rglob("*.parquet"))
+                    # HF datasets are stored in directories with a dataset_info.json file
+                    dataset_dirs = {p.parent for p in path.rglob("dataset_info.json")}
+                    file_paths.update(dataset_dirs)
                 else:
                     file_paths.update(path.glob("*.txt"))
-                    file_paths.update(path.glob("*.parquet"))
+                    if (path / "dataset_info.json").exists():
+                        file_paths.add(path)
             elif path.is_file():
                 file_paths.add(path)
 
         return file_paths
 
-    def save(self, output_path: str) -> None:
-        """Save the corpus DataFrame to disk in Parquet format.
+    @staticmethod
+    def save(dataset: Dataset, output_path: str | Path) -> None:
+        """Save a Dataset to disk using Hugging Face's native format.
 
         Args:
-            output_path: Path where to save the corpus (should have .parquet extension)
+            dataset: Hugging Face Dataset to save
+            output_path: Path where to save the dataset (directory path, not file path)
 
         Examples:
             Basic save to existing directory
@@ -184,22 +211,20 @@ class Corpus:
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
-            ...     output_file = temp_dir / "corpus.parquet"
-            ...     corpus.save(output_file)
-            ...     output_file.exists()
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
+            ...     output_dir = temp_dir / "corpus_dataset"
+            ...     Corpus.save(dataset, output_dir)
+            ...     output_dir.exists()
             True
 
             Automatically create non-existing directories
 
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     output_dir = temp_dir / "nested" / "subdir"
-            ...     output_file = output_dir / "corpus.parquet"
-            ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
-            ...     corpus.save(output_file)
-            ...     output_file.exists()
+            ...     output_dir = temp_dir / "nested" / "subdir" / "corpus_dataset"
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
+            ...     Corpus.save(dataset, output_dir)
+            ...     output_dir.exists()
             True
         """
         output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        self.data.sink_parquet(output_path)
+        dataset.save_to_disk(output_path)
