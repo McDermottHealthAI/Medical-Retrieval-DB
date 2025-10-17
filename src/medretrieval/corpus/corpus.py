@@ -63,9 +63,6 @@ class Corpus:
 
             Load parquet file with streaming (lazy loading)
 
-            >>> output_path = temp_dir / "corpus_dataset.parquet"
-            >>> Corpus.save(dataset, output_path)
-            >>> # Load with streaming for memory efficiency
             >>> streamed_dataset = Corpus.load_data(output_path, streaming=True)
             >>> # Streaming datasets are iterable, list() to get the first element
             >>> list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic condition")
