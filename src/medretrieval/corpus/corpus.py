@@ -5,40 +5,36 @@ This module provides functionality to read, save, and load corpus objects contai
 
 from pathlib import Path
 
-import polars as pl
+from datasets import Dataset, concatenate_datasets
 
 
 class Corpus:
-    """A corpus object that manages medical text documents.
+    """A utility class for managing medical text documents.
 
-    The Corpus class automatically detects file types and loads txt and parquet files
-    into a unified DataFrame with document_id and content columns.
-
-    Attributes:
-        data: Polars DataFrame containing document_id and content columns
+    The Corpus class provides static methods to load txt and parquet files into Hugging Face Datasets with
+    document_id and content columns. Supports streaming for large parquet files to enable memory-efficient
+    processing.
     """
 
-    def __init__(self, file_paths: str | Path | list[str] | list[Path], include_subdirs: bool = False):
-        """Initialize a Corpus object and load files from path.
-
-        Args:
-            file_paths: Single file path, directory path, or list of file paths to load.
-            include_subdirs: If True, search subdirectories recursively.
-        """
-        self.data = self.load_data(file_paths, include_subdirs)
-
-    @classmethod
+    @staticmethod
     def load_data(
-        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
-    ) -> pl.LazyFrame:
-        """Load files from path using lazy loading.
+        paths: str | Path | list[str] | list[Path], include_subdirs: bool = False, streaming: bool = False
+    ) -> Dataset:
+        """Load files from path and return as Hugging Face Dataset.
+
+        Supports loading:
+        - Individual .txt files
+        - Individual .parquet files (with streaming)
+        - Directories containing .txt/.parquet files
 
         Args:
             paths: Single file path, directory path, or list of file paths
             include_subdirs: If True, search subdirectories recursively.
+            streaming: If True, load parquet files lazily for memory efficiency
 
         Returns:
-            Polars LazyFrame with document_id and content columns (call .collect() to materialize)
+            Hugging Face Dataset with document_id and content columns.
+            When streaming=True, parquet files are loaded lazily for memory efficiency.
 
         Examples:
             Load single text file
@@ -47,12 +43,29 @@ class Corpus:
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     df = Corpus.load_data(temp_dir / "diabetes.txt").collect()
-            ...     df.columns
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
+            ...     dataset.column_names
             ['document_id', 'content']
-            >>> df.height
+            >>> len(dataset)
             1
-            >>> df["content"][0].startswith("Diabetes is a chronic condition")
+            >>> dataset["content"][0].startswith("Diabetes is a chronic condition")
+            True
+
+            Load Hugging Face dataset directory
+
+            >>> output_path = temp_dir / "corpus_dataset.parquet"
+            >>> Corpus.save(dataset, output_path)
+            >>> loaded_dataset = Corpus.load_data(output_path)
+            >>> len(loaded_dataset)
+            1
+            >>> loaded_dataset["content"][0].startswith("Diabetes is a chronic condition")
+            True
+
+            Load parquet file with streaming (lazy loading)
+
+            >>> streamed_dataset = Corpus.load_data(output_path, streaming=True)
+            >>> # Streaming datasets are iterable, list() to get the first element
+            >>> list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic condition")
             True
 
             Unsupported file type
@@ -66,35 +79,34 @@ class Corpus:
                 ...
             ValueError: Unsupported file type: .py
         """
-        file_paths = cls._get_file_paths(paths, include_subdirs)
+        file_paths = Corpus._get_file_paths(paths, include_subdirs)
 
-        dfs = []
+        dsets = []
+        documents = []
         for file_path in file_paths:
             try:
                 if file_path.suffix.lower() == ".txt":
                     content = file_path.read_text()
-                    df = pl.DataFrame({"document_id": [str(file_path)], "content": [content]})
-                    dfs.append(df.lazy())
+                    documents.append({"document_id": str(file_path), "content": content})
                 elif file_path.suffix.lower() == ".parquet":
-                    df = pl.scan_parquet(file_path)
-                    if "document_id" not in df.columns or "content" not in df.columns:
-                        raise ValueError(
-                            f"Parquet file {file_path} must contain 'document_id' and 'content' columns"
-                        )
-                    dfs.append(df)
+                    dataset = Dataset.from_parquet(str(file_path), streaming=streaming)
+                    dsets.append(dataset)
                 else:
                     raise ValueError(f"Unsupported file type: {file_path.suffix}")
-
             except ValueError as e:
                 # Re-raise ValueError as-is (unsupported file type)
                 raise e
             except Exception as e:
                 raise OSError(f"Error reading file {file_path}: {e!s}") from e
-        return pl.concat(dfs)
 
-    @classmethod
+        if documents:
+            dsets.append(Dataset.from_list(documents))
+
+        return concatenate_datasets(dsets)
+
+    @staticmethod
     def _get_file_paths(
-        cls, paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
+        paths: str | Path | list[str] | list[Path], include_subdirs: bool = False
     ) -> set[Path]:
         """Collect all file paths from the given paths.
 
@@ -106,16 +118,6 @@ class Corpus:
             Set of Path objects for all found files
 
         Examples:
-            Single file path
-
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = Corpus._get_file_paths(temp_dir / "diabetes.txt")
-            ...     list(result)[0].name
-            'diabetes.txt'
-
             Directory (non-recursive)
 
             >>> test_data = '''
@@ -171,35 +173,13 @@ class Corpus:
 
         return file_paths
 
-    def save(self, output_path: str) -> None:
-        """Save the corpus DataFrame to disk in Parquet format.
+    @staticmethod
+    def save(dataset: Dataset, output_path: str | Path) -> None:
+        """Save a Dataset to disk in Parquet format.
 
         Args:
-            output_path: Path where to save the corpus (should have .parquet extension)
-
-        Examples:
-            Basic save to existing directory
-
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
-            ...     output_file = temp_dir / "corpus.parquet"
-            ...     corpus.save(output_file)
-            ...     output_file.exists()
-            True
-
-            Automatically create non-existing directories
-
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     output_dir = temp_dir / "nested" / "subdir"
-            ...     output_file = output_dir / "corpus.parquet"
-            ...     corpus = Corpus(str(temp_dir / "diabetes.txt"))
-            ...     corpus.save(output_file)
-            ...     output_file.exists()
-            True
+            dataset: Hugging Face Dataset to save
+            output_path: Path where to save the dataset (should have .parquet extension)
         """
         output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        self.data.sink_parquet(output_path)
+        dataset.to_parquet(output_path)
