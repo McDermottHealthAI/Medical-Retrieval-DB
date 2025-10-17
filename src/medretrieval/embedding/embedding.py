@@ -1,8 +1,5 @@
 """Embedding class for generating embeddings from medical text documents."""
 
-from pathlib import Path
-
-import numpy as np
 import torch
 from datasets import Dataset
 from sentence_transformers import SentenceTransformer
@@ -61,10 +58,10 @@ class Embedding:
 
     def _encode_batch(self, examples):
         """Private method to encode a batch of documents.
-        
+
         Args:
             examples: Batch of examples containing 'content' field
-            
+
         Returns:
             Dictionary with 'embeddings' field containing numpy arrays
         """
@@ -72,6 +69,6 @@ class Embedding:
             examples["content"],
             convert_to_tensor=True,
             show_progress_bar=False,
-            batch_size=len(examples["content"])
+            batch_size=len(examples["content"]),
         )
         return {"embeddings": embeddings}
