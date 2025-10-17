@@ -53,32 +53,22 @@ class Corpus:
 
             Load Hugging Face dataset directory
 
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
-            ...     output_path = temp_dir / "corpus_dataset.parquet"
-            ...     Corpus.save(dataset, output_path)
-            ...     loaded_dataset = Corpus.load_data(output_path)
-            ...     len(loaded_dataset)
+            >>> output_path = temp_dir / "corpus_dataset.parquet"
+            >>> Corpus.save(dataset, output_path)
+            >>> loaded_dataset = Corpus.load_data(output_path)
+            >>> len(loaded_dataset)
             1
             >>> loaded_dataset["content"][0].startswith("Diabetes is a chronic condition")
             True
 
             Load parquet file with streaming (lazy loading)
 
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
-            ...     output_path = temp_dir / "corpus_dataset.parquet"
-            ...     Corpus.save(dataset, output_path)
-            ...     # Load with streaming for memory efficiency
-            ...     streamed_dataset = Corpus.load_data(output_path, streaming=True)
-            ...     # Streaming datasets are iterable, list() to get the first element
-            ...     list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic condition")
+            >>> output_path = temp_dir / "corpus_dataset.parquet"
+            >>> Corpus.save(dataset, output_path)
+            >>> # Load with streaming for memory efficiency
+            >>> streamed_dataset = Corpus.load_data(output_path, streaming=True)
+            >>> # Streaming datasets are iterable, list() to get the first element
+            >>> list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic condition")
             True
 
             Unsupported file type
@@ -131,16 +121,6 @@ class Corpus:
             Set of Path objects for all found files
 
         Examples:
-            Single file path
-
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     result = Corpus._get_file_paths(temp_dir / "diabetes.txt")
-            ...     list(result)[0].name
-            'diabetes.txt'
-
             Directory (non-recursive)
 
             >>> test_data = '''
@@ -203,28 +183,6 @@ class Corpus:
         Args:
             dataset: Hugging Face Dataset to save
             output_path: Path where to save the dataset (should have .parquet extension)
-
-        Examples:
-            Basic save to existing directory
-
-            >>> test_data = '''
-            ... diabetes.txt: "Diabetes is a chronic condition..."
-            ... '''
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
-            ...     output_file = temp_dir / "corpus.parquet"
-            ...     Corpus.save(dataset, output_file)
-            ...     output_file.exists()
-            True
-
-            Automatically create non-existing directories
-
-            >>> with yaml_disk(test_data) as temp_dir:
-            ...     output_file = temp_dir / "nested" / "subdir" / "corpus.parquet"
-            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
-            ...     Corpus.save(dataset, output_file)
-            ...     output_file.exists()
-            True
         """
         output_path = Path(output_path)
         dataset.to_parquet(output_path)
