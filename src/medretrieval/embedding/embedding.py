@@ -49,26 +49,9 @@ class Embedding:
             True
         """
         dataset_with_embeddings = dataset.map(
-            self._encode_batch,
+            lambda x: {"embeddings": self.model.encode(x["content"])},
             batched=True,
             batch_size=batch_size,
         )
         dataset_with_embeddings.set_format(type="numpy")
         return dataset_with_embeddings
-
-    def _encode_batch(self, examples):
-        """Private method to encode a batch of documents.
-
-        Args:
-            examples: Batch of examples containing 'content' field
-
-        Returns:
-            Dictionary with 'embeddings' field containing numpy arrays
-        """
-        embeddings = self.model.encode(
-            examples["content"],
-            convert_to_tensor=True,
-            show_progress_bar=False,
-            batch_size=len(examples["content"]),
-        )
-        return {"embeddings": embeddings}
