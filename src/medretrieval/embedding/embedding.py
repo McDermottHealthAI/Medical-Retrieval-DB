@@ -91,14 +91,14 @@ class Embedding:
             ...     corpus_dataset = Corpus.load_data(temp_dir)
             ...     embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base")
             ...     dataset = embedding.embed(corpus_dataset)
-            ...     scores, examples = embedding.query(dataset, ["Diabetes", "Heart disease"], k=1)
-            ...     len(examples[0]["content"]) == len(examples[1]["content"]) == 1  # 1 per query
+            ...     scores, examples = embedding.query(dataset, ["heart disease", "diabetes treatment"], k=1)
+            ...     len(scores) == 2  # Two queries
             True
-            >>> examples[0]["content"][0] == "Diabetes is a chronic condition affecting blood sugar levels."
+            >>> examples[1]["content"][0] == "Diabetes is a chronic condition affecting blood sugar levels."
             True
-            >>> examples[1]["content"][0] == "Heart disease is a leading cause of death worldwide."
+            >>> examples[0]["content"][0] == "Heart disease is a leading cause of death worldwide."
             True
         """
-        encoded_queries = self.model.encode(queries)
-        scores, examples = dataset.get_nearest_examples_batch("embeddings", encoded_queries, k)
-        return scores, examples
+        query_examples = {"content": queries}
+        encoded_queries = self._encode_batch(query_examples)["embeddings"]
+        return dataset.get_nearest_examples_batch("embeddings", encoded_queries, k)

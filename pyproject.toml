@@ -19,7 +19,11 @@ classifiers = [
 ]
 dependencies = [
     "datasets>=2.14.0",
+<<<<<<< HEAD
     "faiss-cpu>=1.12.0",
+=======
+    "faiss-cpu>=1.7.0",  # FAISS for efficient similarity search
+>>>>>>> dd6acac (add faiss indexing)
     "hydra-core>=1.3.0",
     "omegaconf>=2.3.0",
     "pyarrow>=10.0.0",
