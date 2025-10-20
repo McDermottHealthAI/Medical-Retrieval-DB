@@ -92,7 +92,7 @@ class Embedding:
             ...     embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base")
             ...     dataset = embedding.embed(corpus_dataset)
             ...     scores, examples = embedding.query(dataset, ["Diabetes", "Heart disease"], k=1)
-            ...     len(examples[0]["content"]) == len(examples[1]["content"]) == 1  # One nearest neighbor per query
+            ...     len(examples[0]["content"]) == len(examples[1]["content"]) == 1  # 1 neighbor per query
             True
             >>> examples[0]["content"][0] == "Diabetes is a chronic condition affecting blood sugar levels."
             True
