@@ -52,7 +52,7 @@ class Embedding:
             True
         """
         dataset_with_embeddings = dataset.map(
-            self._encode_batch,
+            lambda x: {"embeddings": self.model.encode(x["content"])},
             batched=True,
             batch_size=batch_size,
         )
@@ -60,22 +60,6 @@ class Embedding:
         if build_faiss_index:
             dataset_with_embeddings.add_faiss_index("embeddings")
         return dataset_with_embeddings
-
-    def _encode_batch(self, examples):
-        """Private method to encode a batch of documents.
-
-        Args:
-            examples: Batch of examples containing 'content' field
-
-        Returns:
-            Dictionary with 'embeddings' field containing numpy arrays
-        """
-        embeddings = self.model.encode(
-            examples["content"],
-            show_progress_bar=False,
-            batch_size=len(examples["content"]),
-        )
-        return {"embeddings": embeddings}
 
     def query(
         self, dataset: Dataset, queries: list[str], k: int = 1
@@ -107,14 +91,14 @@ class Embedding:
             ...     corpus_dataset = Corpus.load_data(temp_dir)
             ...     embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base")
             ...     dataset = embedding.embed(corpus_dataset)
-            ...     scores, examples = embedding.query(dataset, ["heart disease", "diabetes treatment"], k=1)
-            ...     len(scores) == 2  # Two queries
+            ...     scores, examples = embedding.query(dataset, ["Diabetes", "Heart disease"], k=1)
+            ...     len(examples[0]["content"]) == len(examples[1]["content"]) == 1  # One nearest neighbor per query
             True
-            >>> examples[1]["content"][0] == "Diabetes is a chronic condition affecting blood sugar levels."
+            >>> examples[0]["content"][0] == "Diabetes is a chronic condition affecting blood sugar levels."
             True
-            >>> examples[0]["content"][0] == "Heart disease is a leading cause of death worldwide."
+            >>> examples[1]["content"][0] == "Heart disease is a leading cause of death worldwide."
             True
         """
-        query_examples = {"content": queries}
-        encoded_queries = self._encode_batch(query_examples)["embeddings"]
-        return dataset.get_nearest_examples_batch("embeddings", encoded_queries, k)
+        encoded_queries = self.model.encode(queries)
+        scores, examples = dataset.get_nearest_examples_batch("embeddings", encoded_queries, k)
+        return scores, examples
