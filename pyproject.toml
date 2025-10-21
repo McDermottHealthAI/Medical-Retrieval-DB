@@ -23,6 +23,9 @@ dependencies = [
     "omegaconf>=2.3.0",
     "pyarrow>=10.0.0",
     "polars>=0.20.0",
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "sentence-transformers>=2.2.0",
 ] # Add your runtime dependencies here
 
 [dependency-groups]
