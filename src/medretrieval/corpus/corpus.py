@@ -22,8 +22,8 @@ class Corpus:
         paths: str | Path | list[str] | list[Path],
         include_subdirs: bool = False,
         streaming: bool = False,
-        chunk_size: int = 500,
-        chunk_overlap: int = 100,
+        chunk_size: int = 1000,
+        chunk_overlap: int = 200,
     ) -> Dataset:
         """Load files from path and return as Hugging Face Dataset.
 
