@@ -44,7 +44,7 @@ class Embedding:
             ...     dataset = Corpus.load_data(temp_dir)
             ...     embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base")
             ...     dataset_with_embeddings = embedding.embed(dataset, batch_size=32)
-            ...     len(dataset_with_embeddings) == 2  # Number of documents
+            ...     len(dataset_with_embeddings) == 2  # Number of text chunks (1 per file when short)
             True
             >>> "embeddings" in dataset_with_embeddings.column_names
             True
