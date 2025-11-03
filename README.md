@@ -31,8 +31,13 @@ The `medretrieval` package provides two main classes:
 
 ```python
 >>> from medretrieval import Corpus, Embedding
+>>> from yaml_to_disk import yaml_disk
 >>>
->>> with get_test_data() as temp_dir:
+>>> test_data = '''
+... diabetes.txt: "Diabetes is a chronic condition that affects blood sugar levels."
+... heart.txt: "Heart disease is a leading cause of death worldwide."
+... '''
+>>> with yaml_disk(test_data) as temp_dir:
 ...     dataset = Corpus.load_data(temp_dir)
 >>> embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base")
 >>> dataset_with_embeddings = embedding.embed(dataset)
