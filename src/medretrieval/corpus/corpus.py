@@ -6,24 +6,19 @@ This module provides functionality to read, save, and load corpus objects contai
 from pathlib import Path
 
 from datasets import Dataset, concatenate_datasets
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 class Corpus:
     """A utility class for managing medical text documents.
 
     The Corpus class provides static methods to load txt and parquet files into Hugging Face Datasets with
-    document_id, chunk_id, and content columns. Supports automatic text chunking with configurable size and
-    overlap, and streaming for large parquet files to enable memory-efficient processing.
+    document_id and content columns. Supports streaming for large parquet files to enable memory-efficient
+    processing.
     """
 
     @staticmethod
     def load_data(
-        paths: str | Path | list[str] | list[Path],
-        include_subdirs: bool = False,
-        streaming: bool = False,
-        chunk_size: int = 1000,
-        chunk_overlap: int = 200,
+        paths: str | Path | list[str] | list[Path], include_subdirs: bool = False, streaming: bool = False
     ) -> Dataset:
         """Load files from path and return as Hugging Face Dataset.
 
@@ -36,11 +31,9 @@ class Corpus:
             paths: Single file path, directory path, or list of file paths
             include_subdirs: If True, search subdirectories recursively.
             streaming: If True, load parquet files lazily for memory efficiency
-            chunk_size: Maximum size of text chunks (default: 500)
-            chunk_overlap: Overlap between consecutive chunks (default: 100)
 
         Returns:
-            Hugging Face Dataset with document_id, chunk_id, and content columns.
+            Hugging Face Dataset with document_id and content columns.
             When streaming=True, parquet files are loaded lazily for memory efficiency.
 
         Examples:
@@ -50,14 +43,12 @@ class Corpus:
             ... diabetes.txt: "Diabetes is a chronic condition..."
             ... '''
             >>> with yaml_disk(test_data) as temp_dir:
-            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt", chunk_size=25, chunk_overlap=0)
+            ...     dataset = Corpus.load_data(temp_dir / "diabetes.txt")
             ...     dataset.column_names
-            ['document_id', 'chunk_id', 'content']
+            ['document_id', 'content']
             >>> len(dataset)
-            2
-            >>> dataset["content"][0].startswith("Diabetes is a chronic")
-            True
-            >>> dataset["content"][1].startswith("condition...")
+            1
+            >>> dataset["content"][0].startswith("Diabetes is a chronic condition")
             True
 
             Load Hugging Face dataset directory
@@ -66,15 +57,15 @@ class Corpus:
             >>> Corpus.save(dataset, output_path)
             >>> loaded_dataset = Corpus.load_data(output_path)
             >>> len(loaded_dataset)
-            2
-            >>> loaded_dataset["content"][0].startswith("Diabetes is a chronic")
+            1
+            >>> loaded_dataset["content"][0].startswith("Diabetes is a chronic condition")
             True
 
             Load parquet file with streaming (lazy loading)
 
             >>> streamed_dataset = Corpus.load_data(output_path, streaming=True)
             >>> # Streaming datasets are iterable, list() to get the first element
-            >>> list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic")
+            >>> list(streamed_dataset)[0]["content"].startswith("Diabetes is a chronic condition")
             True
 
             Unsupported file type
@@ -89,7 +80,6 @@ class Corpus:
             ValueError: Unsupported file type: .py
         """
         file_paths = Corpus._get_file_paths(paths, include_subdirs)
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
         dsets = []
         documents = []
@@ -97,13 +87,7 @@ class Corpus:
             try:
                 if file_path.suffix.lower() == ".txt":
                     content = file_path.read_text()
-                    text_chunks = text_splitter.split_text(content)
-                    documents.extend(
-                        [
-                            {"document_id": str(file_path), "chunk_id": i, "content": chunk}
-                            for i, chunk in enumerate(text_chunks)
-                        ]
-                    )
+                    documents.append({"document_id": str(file_path), "content": content})
                 elif file_path.suffix.lower() == ".parquet":
                     dataset = Dataset.from_parquet(str(file_path), streaming=streaming)
                     dsets.append(dataset)
