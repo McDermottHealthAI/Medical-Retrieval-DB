@@ -76,8 +76,11 @@ class Embedding:
             With chunking
 
             >>> embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base", tokens_per_chunk=5)
-            >>> dataset_with_embeddings = embedding.embed(dataset, batch_size=1)
+            >>> dataset_with_embeddings = embedding.embed(dataset)
             >>> len(dataset_with_embeddings) == 5  # 3 chunks for the first file, 2 chunks for the second one
+            True
+            >>> chunk_ids = sorted(list(dataset_with_embeddings["chunk_id"]))
+            >>> chunk_ids == [0, 0, 1, 1, 2]
             True
         """
         dataset_with_embeddings = dataset.map(
