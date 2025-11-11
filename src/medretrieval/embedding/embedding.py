@@ -76,15 +76,15 @@ class Embedding:
             With chunking
 
             >>> embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base", tokens_per_chunk=5)
-            >>> dataset_with_embeddings = embedding.embed(dataset)
+            >>> dataset_with_embeddings = embedding.embed(dataset, batch_size=1)
             >>> len(dataset_with_embeddings) == 5  # 3 chunks for the first file, 2 chunks for the second one
             True
-            >>> list(dataset_with_embeddings["chunk_id"])== [0, 1, 2, 0, 1]
+            >>> list(dataset_with_embeddings["chunk_id"]) == [0, 1, 2, 0, 1]
             True
         """
         dataset_with_embeddings = dataset.map(
             self._chunk_and_embed_batch, batched=True, batch_size=batch_size
-        ).with_format(type="numpy")
+        ).with_format(type="numpy", columns=["embeddings"], output_all_columns=True)
         if build_faiss_index:
             dataset_with_embeddings.add_faiss_index("embeddings")
         return dataset_with_embeddings
