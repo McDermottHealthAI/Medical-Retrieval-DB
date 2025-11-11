@@ -1,22 +1,28 @@
 """Embedding class for generating embeddings from medical text documents.
 
-This module provides the Embedding class which handles text chunking and embedding
-generation for medical text documents using SentenceTransformer models. It supports
-efficient batch processing and FAISS-based similarity search.
+This module provides the Embedding class which handles text chunking and embedding generation for medical text
+documents using SentenceTransformer models. It supports efficient batch processing and FAISS-based similarity
+search.
 """
 
 from typing import Any
 
 import torch
 from datasets import Dataset
-from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import SentenceTransformersTokenTextSplitter
+from sentence_transformers import SentenceTransformer
 
 
 class Embedding:
     """A class for generating embeddings from medical text documents using Hugging Face models."""
 
-    def __init__(self, model_name: str, tokens_per_chunk: int = 500, chunk_overlap: int = 0, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+    def __init__(
+        self,
+        model_name: str,
+        tokens_per_chunk: int = 500,
+        chunk_overlap: int = 0,
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
+    ):
         """Initialize the Embedding class.
 
         Args:
@@ -32,9 +38,8 @@ class Embedding:
         self.device = device
         self.model = self.model.to(self.device)
         self.text_splitter = SentenceTransformersTokenTextSplitter(
-            model_name=model_name,
-            tokens_per_chunk=tokens_per_chunk,
-            chunk_overlap=chunk_overlap)
+            model_name=model_name, tokens_per_chunk=tokens_per_chunk, chunk_overlap=chunk_overlap
+        )
 
     def embed(self, dataset: Dataset, batch_size: int = 32, build_faiss_index: bool = True) -> Dataset:
         """Generate embeddings for all documents in the dataset.
@@ -77,12 +82,14 @@ class Embedding:
 
             >>> embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base", tokens_per_chunk=5)
             >>> dataset_with_embeddings = embedding.embed(dataset)
-            >>> len(dataset_with_embeddings) == 5  # Number of text chunks (3 for the first file, 2 for the second one)
+            >>> len(dataset_with_embeddings) == 5  # 3 chunks for the first file, 2 chunks for the second one
             True
             >>> list(dataset_with_embeddings["chunk_id"])== [0, 1, 2, 0, 1]
             True
         """
-        dataset_with_embeddings = dataset.map(self._chunk_and_embed_batch, batched=True, batch_size=batch_size).with_format(type="numpy")
+        dataset_with_embeddings = dataset.map(
+            self._chunk_and_embed_batch, batched=True, batch_size=batch_size
+        ).with_format(type="numpy")
         if build_faiss_index:
             dataset_with_embeddings.add_faiss_index("embeddings")
         return dataset_with_embeddings
@@ -106,7 +113,7 @@ class Embedding:
             - embeddings: List of embedding vectors (as lists of floats)
         """
         chunks, embeddings, doc_ids, chunk_ids = [], [], [], []
-        for document_id, text in zip(batch["document_id"], batch["content"]):
+        for document_id, text in zip(batch["document_id"], batch["content"], strict=False):
             batch_chunks = self.text_splitter.split_text(text)
             batch_embeddings = self.model.encode(batch_chunks).tolist()
 
@@ -121,7 +128,6 @@ class Embedding:
             "content": chunks,
             "embeddings": embeddings,
         }
-
 
     def query(
         self, dataset: Dataset, queries: list[str], k: int = 1
