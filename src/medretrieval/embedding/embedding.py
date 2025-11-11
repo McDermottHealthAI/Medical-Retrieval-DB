@@ -1,9 +1,4 @@
-"""Embedding class for generating embeddings from medical text documents.
-
-This module provides the Embedding class which handles text chunking and embedding generation for medical text
-documents using SentenceTransformer models. It supports efficient batch processing and FAISS-based similarity
-search.
-"""
+"""Embedding class for generating embeddings from medical text documents."""
 
 from typing import Any
 
