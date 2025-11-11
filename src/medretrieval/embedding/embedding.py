@@ -59,7 +59,7 @@ class Embedding:
             - embeddings: Embedding vectors as lists of floats
 
         Examples:
-            Generate embeddings with chunking
+            Without chunking
 
             >>> from medretrieval import Corpus
             >>> with get_test_data() as temp_dir:
@@ -73,7 +73,7 @@ class Embedding:
             >>> len(dataset_with_embeddings["embeddings"][0]) == 768  # Embedding dimension
             True
 
-            Test chunking behavior with long text
+            With chunking
 
             >>> embedding = Embedding("thomas-sounack/BioClinical-ModernBERT-base", tokens_per_chunk=5)
             >>> dataset_with_embeddings = embedding.embed(dataset)
