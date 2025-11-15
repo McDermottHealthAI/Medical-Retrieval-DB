@@ -19,9 +19,11 @@ def main():
     # Load dataset
     print(f"Loading dataset from {args.dataset_url}/{args.dataset_name}/{args.dataset_split}")
     dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split, streaming=True)
-    dataset = dataset.rename_column(args.document_id_column, "document_id")
-    dataset = dataset.rename_column(args.content_column, "content")
-    dataset = dataset.remove_columns(set(dataset.column_names) - set(['document_id', 'content']))
+    if args.document_id_column != "document_id":
+        dataset = dataset.rename_column(args.document_id_column, "document_id")
+    if args.content_column != "content":
+        dataset = dataset.rename_column(args.content_column, "content")
+    # dataset = dataset.remove_columns(set(dataset.column_names) - set(['document_id', 'content']))
 
     # Generate embeddings
     print(f"Generating embeddings...")
