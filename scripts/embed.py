@@ -18,21 +18,21 @@ def main():
 
     # Load dataset
     print(f"Loading dataset from {args.dataset_url}/{args.dataset_name}/{args.dataset_split}")
-    dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split)
+    dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split, streaming=True)
     dataset = dataset.rename_column(args.document_id_column, "document_id")
     dataset = dataset.rename_column(args.content_column, "content")
     dataset = dataset.remove_columns(set(dataset.column_names) - set(['document_id', 'content']))
 
     # Generate embeddings
-    print(f"Generating embeddings for {len(dataset)} documents")
+    print(f"Generating embeddings...")
     embedding = Embedding(model_name=args.model, tokens_per_chunk=args.chunk_size)
-    start = time.time()
     dataset_with_embeddings = embedding.embed(dataset, build_faiss_index=False)
-    end = time.time()
-    print(f"Generated embeddings in {end - start} seconds")
 
     print(f"Saving dataset with embeddings to {args.output_dir}")
+    start = time.time()
     Corpus.save(dataset_with_embeddings, f"{args.output_dir}/{args.dataset_name}_{args.model}_{args.chunk_size}.parquet")
+    end = time.time()
+    print(f"Generated embeddings in {end - start} seconds")
     print("Done!")
 
 

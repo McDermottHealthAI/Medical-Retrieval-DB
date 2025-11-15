@@ -85,8 +85,9 @@ class Embedding:
         """
         dataset_with_embeddings = dataset.map(
             self._chunk_and_embed_batch, batched=True, batch_size=batch_size
-        ).with_format(type="numpy", columns=["embeddings"], output_all_columns=True)
+        )
         if build_faiss_index:
+            dataset_with_embeddings.set_format(type="numpy", columns=["embeddings"], output_all_columns=True)
             dataset_with_embeddings.add_faiss_index("embeddings")
         return dataset_with_embeddings
 
