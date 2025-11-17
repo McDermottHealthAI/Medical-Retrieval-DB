@@ -14,11 +14,14 @@ def main():
     parser.add_argument("--document_id_column", type=str, default="document_id", help="Column name to use as document ID (default: document_id)")
     parser.add_argument("--content_column", type=str, default="content", help="Column name to use as content (default: content)")
     parser.add_argument("--output_dir", type=str, default="experiments/embeddings/", help="Directory to save the dataset with embeddings")
+    parser.add_argument("--num_samples", type=int, default=None, help="Number of samples to take from the dataset (default: 500)")
     args = parser.parse_args()
 
     # Load dataset
     print(f"Loading dataset from {args.dataset_url}/{args.dataset_name}/{args.dataset_split}")
     dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split, streaming=True)
+    if args.num_samples is not None:
+        dataset = dataset.take(args.num_samples)
     if args.document_id_column != "document_id":
         dataset = dataset.rename_column(args.document_id_column, "document_id")
     if args.content_column != "content":
