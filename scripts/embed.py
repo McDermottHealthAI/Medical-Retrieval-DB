@@ -19,7 +19,7 @@ def main():
 
     # Load dataset
     print(f"Loading dataset from {args.dataset_url}/{args.dataset_name}/{args.dataset_split}")
-    dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split, streaming=True)
+    dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split)
     if args.num_samples is not None:
         dataset = dataset.take(args.num_samples)
     if args.document_id_column != "document_id":
@@ -35,7 +35,8 @@ def main():
 
     print(f"Saving dataset with embeddings to {args.output_dir}")
     start = time.time()
-    Corpus.save(dataset_with_embeddings, f"{args.output_dir}/{args.dataset_name}_{args.model}_{args.chunk_size}.parquet")
+    output_file_name = f"{args.dataset_url}_{args.dataset_name}_{args.model}_{args.chunk_size}.parquet".replace("/", "_")
+    Corpus.save(dataset_with_embeddings, f"{args.output_dir}/{output_file_name}")
     end = time.time()
     print(f"Generated embeddings in {end - start} seconds")
     print("Done!")
@@ -43,4 +44,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
