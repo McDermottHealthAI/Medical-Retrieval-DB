@@ -112,10 +112,12 @@ class Embedding:
         chunks, embeddings, doc_ids, chunk_ids = [], [], [], []
         for document_id, text in zip(batch["document_id"], batch["content"], strict=False):
             batch_chunks = self.text_splitter.split_text(text)
-            if len(batch_chunks) == 0:
-                continue
             batch_embeddings = self.model.encode(batch_chunks).tolist()
-            if len(batch_embeddings) == 0:
+
+            if len(batch_chunks) != len(batch_embeddings):
+                print(
+                    f"Warning: {len(batch_chunks)} chunks and "
+                    f"{len(batch_embeddings)} embeddings for document {document_id}, skipping...")
                 continue
 
             chunks.extend(batch_chunks)
