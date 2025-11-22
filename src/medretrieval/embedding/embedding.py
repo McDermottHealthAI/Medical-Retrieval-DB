@@ -83,7 +83,7 @@ class Embedding:
             >>> chunk_ids == [0, 0, 1, 1, 2]
             True
         """
-        dataset = dataset.map(self._chunk_and_embed_batch, batched=True, batch_size=batch_size)
+        dataset = dataset.map(self._chunk_batch, batched=True, batch_size=batch_size)
         dataset_with_embeddings = dataset.map(self._embed_batch, batched=True, batch_size=batch_size)
         if build_faiss_index:
             dataset_with_embeddings.set_format(type="numpy", columns=["embeddings"], output_all_columns=True)
@@ -99,7 +99,7 @@ class Embedding:
         embeddings = self.model.encode(batch["content"])
         return {"embeddings": embeddings}
 
-    def _chunk_and_embed_batch(self, batch: dict[str, list[str]]) -> dict:
+    def _chunk_batch(self, batch: dict[str, list[str]]) -> dict:
         """Chunk a batch of documents.
 
         This private method processes a batch of documents by:
