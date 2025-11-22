@@ -83,20 +83,28 @@ class Embedding:
             >>> chunk_ids == [0, 0, 1, 1, 2]
             True
         """
-        dataset_with_embeddings = dataset.map(
-            self._chunk_and_embed_batch, batched=True, batch_size=batch_size
-        ).with_format(type="numpy", columns=["embeddings"], output_all_columns=True)
+        dataset = dataset.map(self._chunk_batch, batched=True, batch_size=batch_size)
+        dataset_with_embeddings = dataset.map(self._embed_batch, batched=True, batch_size=batch_size)
         if build_faiss_index:
+            dataset_with_embeddings.set_format(type="numpy", columns=["embeddings"], output_all_columns=True)
             dataset_with_embeddings.add_faiss_index("embeddings")
         return dataset_with_embeddings
 
-    def _chunk_and_embed_batch(self, batch: dict[str, list[str]]) -> dict:
-        """Chunk and embed a batch of documents.
+    def _embed_batch(self, batch: dict[str, list[str]]) -> dict:
+        """Embed a batch of documents.
+
+        Args:
+            batch: Dictionary containing "document_id" and "content" lists for a batch of documents
+        """
+        embeddings = self.model.encode(batch["content"])
+        return {"embeddings": embeddings}
+
+    def _chunk_batch(self, batch: dict[str, list[str]]) -> dict:
+        """Chunk a batch of documents.
 
         This private method processes a batch of documents by:
         1. Splitting each document into chunks using the token-based text splitter
-        2. Generating embeddings for all chunks in the batch
-        3. Creating metadata (document_id, chunk_id) for each chunk
+        2. Creating metadata (document_id, chunk_id) for each chunk
 
         Args:
             batch: Dictionary containing "document_id" and "content" lists for a batch of documents
@@ -106,15 +114,11 @@ class Embedding:
             - document_id: List of document IDs (repeated for each chunk from that document)
             - chunk_id: List of sequential chunk IDs (0-indexed per document)
             - content: List of chunk text contents
-            - embeddings: List of embedding vectors (as lists of floats)
         """
-        chunks, embeddings, doc_ids, chunk_ids = [], [], [], []
+        chunks, doc_ids, chunk_ids = [], [], []
         for document_id, text in zip(batch["document_id"], batch["content"], strict=False):
             batch_chunks = self.text_splitter.split_text(text)
-            batch_embeddings = self.model.encode(batch_chunks).tolist()
-
             chunks.extend(batch_chunks)
-            embeddings.extend(batch_embeddings)
             doc_ids.extend([document_id] * len(batch_chunks))
             chunk_ids.extend(list(range(len(batch_chunks))))
 
@@ -122,7 +126,6 @@ class Embedding:
             "document_id": doc_ids,
             "chunk_id": chunk_ids,
             "content": chunks,
-            "embeddings": embeddings,
         }
 
     def query(
