@@ -22,6 +22,8 @@ uv sync
 
 ## Quick Start
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/McDermottHealthAI/Medical-Retrieval-DB/blob/main/examples/medretrieval_example.ipynb)
+
 The `medretrieval` package provides two main classes:
 
 - **`Corpus`**: Loads medical text documents from `.txt` and `.parquet` files into Hugging Face Datasets
