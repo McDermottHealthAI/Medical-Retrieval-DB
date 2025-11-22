@@ -83,12 +83,8 @@ class Embedding:
             >>> chunk_ids == [0, 0, 1, 1, 2]
             True
         """
-        dataset = dataset.map(
-            self._chunk_and_embed_batch, batched=True, batch_size=batch_size
-        )
-        dataset_with_embeddings = dataset.map(
-            self._embed_batch, batched=True, batch_size=batch_size
-        )
+        dataset = dataset.map(self._chunk_batch, batched=True, batch_size=batch_size)
+        dataset_with_embeddings = dataset.map(self._embed_batch, batched=True, batch_size=batch_size)
         if build_faiss_index:
             dataset_with_embeddings.set_format(type="numpy", columns=["embeddings"], output_all_columns=True)
             dataset_with_embeddings.add_faiss_index("embeddings")
@@ -96,15 +92,14 @@ class Embedding:
 
     def _embed_batch(self, batch: dict[str, list[str]]) -> dict:
         """Embed a batch of documents.
-        
         Args:
             batch: Dictionary containing "document_id" and "content" lists for a batch of documents
         """
         embeddings = self.model.encode(batch["content"])
         return {"embeddings": embeddings}
 
-    def _chunk_and_embed_batch(self, batch: dict[str, list[str]]) -> dict:
-        """Chunk and embed a batch of documents.
+    def _chunk_batch(self, batch: dict[str, list[str]]) -> dict:
+        """Chunk a batch of documents.
 
         This private method processes a batch of documents by:
         1. Splitting each document into chunks using the token-based text splitter
