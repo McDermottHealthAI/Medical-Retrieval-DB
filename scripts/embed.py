@@ -50,7 +50,7 @@ def main():
         all_columns = next(iter(dataset)).keys()
     else:
         all_columns = dataset.column_names
-        dataset = dataset.remove_columns(set(all_columns) - set(['document_id', 'content']))
+    dataset = dataset.remove_columns(set(all_columns) - set(['document_id', 'content']))
 
     # Generate embeddings
     start = time.time()
