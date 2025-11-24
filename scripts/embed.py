@@ -3,7 +3,7 @@ import time
 
 import wandb
 from medretrieval import Corpus, Embedding
-from datasets import load_dataset
+from datasets import load_dataset, IterableDataset
 
 def main():
     parser = argparse.ArgumentParser(description="Generate embeddings for medical text documents")
@@ -45,7 +45,11 @@ def main():
         dataset = dataset.rename_column(args.document_id_column, "document_id")
     if args.content_column != "content":
         dataset = dataset.rename_column(args.content_column, "content")
-    dataset = dataset.remove_columns(set(dataset.column_names) - set(['document_id', 'content']))
+    if isinstance(dataset, IterableDataset):
+        all_columns = next(iter(dataset)).keys()
+    else:
+        all_columns = dataset.column_names
+        dataset = dataset.remove_columns(set(all_columns) - set(['document_id', 'content']))
 
     # Generate embeddings
     start = time.time()
