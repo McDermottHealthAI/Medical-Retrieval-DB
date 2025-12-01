@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--content_column", type=str, default="content", help="Column name to use as content (default: content)")
     parser.add_argument("--output_dir", type=str, default="experiments/embeddings/", help="Directory to save the dataset with embeddings")
     parser.add_argument("--num_samples", type=int, default=None, help="Number of samples to take from the dataset (default: 500)")
+    parser.add_argument("--shard_index", type=int, default=None, help="Shard index to take from the dataset (default: None)")
     parser.add_argument("--wandb_project", type=str, default="medical-retrieval-embeddings", help="Weights & Biases project name")
     parser.add_argument("--wandb_name", type=str, default=None, help="Weights & Biases run name")
     args = parser.parse_args()
@@ -40,6 +41,8 @@ def main():
     # Load dataset
     print(f"Loading dataset from {args.dataset_url}/{args.dataset_name}/{args.dataset_split}")
     dataset = load_dataset(args.dataset_url, args.dataset_name, split=args.dataset_split, streaming=True)
+    if args.shard_index is not None:
+        dataset = dataset.shard(num_shards=dataset.num_shards, index=args.shard_index)
     if args.num_samples is not None:
         dataset = dataset.take(args.num_samples)
     if args.document_id_column != "document_id":
@@ -59,19 +62,19 @@ def main():
     dataset_with_embeddings = embedding.embed(dataset, build_faiss_index=False)
 
     print(f"Saving dataset with embeddings to {args.output_dir}")
-    # output_file_name = f"{args.dataset_url}_{args.dataset_name}_{args.model}_{args.chunk_size}.parquet".replace("/", "_")
-    # Corpus.save(dataset_with_embeddings, f"{args.output_dir}/{output_file_name}")
-    batched_buffer = []
-    for i, row in enumerate(dataset_with_embeddings):
-        batched_buffer.append(row)
-        if i % 10000 == 0:
-            output_file_name = f"{args.dataset_url}_{args.dataset_name}_{args.model}_{args.chunk_size}__{i // 10000}.parquet".replace("/", "_")
-            Corpus.save(Dataset.from_list(batched_buffer), f"{args.output_dir}/{output_file_name}")
-            batched_buffer = []
+    output_file_name = f"{args.dataset_url}_{args.dataset_name}_{args.model}_{args.chunk_size}__{args.shard_index}.parquet".replace("/", "_")
+    Corpus.save(dataset_with_embeddings, f"{args.output_dir}/{output_file_name}")
+    # batched_buffer = []
+    # for i, row in enumerate(dataset_with_embeddings):
+    #     batched_buffer.append(row)
+    #     if i % 10000 == 0:
+    #         output_file_name = f"{args.dataset_url}_{args.dataset_name}_{args.model}_{args.chunk_size}__{i // 10000}.parquet".replace("/", "_")
+    #         Corpus.save(Dataset.from_list(batched_buffer), f"{args.output_dir}/{output_file_name}")
+    #         batched_buffer = []
     end = time.time()
     elapsed_time = end - start
     print(f"Generated embeddings in {elapsed_time} seconds")
-    
+
     # Log metrics to wandb
     wandb.log({
         "total_time_seconds": elapsed_time,
